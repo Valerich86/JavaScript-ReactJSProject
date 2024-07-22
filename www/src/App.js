@@ -1,36 +1,57 @@
 import React from 'react';
 import Header from './components/Header';
-import Image from './components/Image.js';
-import logo from './img/logo.png';
+import Users from './components/Users';
+import AddUser from './components/AddUser';
+import axios from 'axios';
+
+const baseUrl = "https://reqres.in/api/users?page=1"
 
 class App extends React.Component {
     constructor(props){
         super(props)
+
+        axios.get(baseUrl).then((res)=> {
+            this.setState({users: res.data.data})
+        })
+        // состояние, которое является массивом
         this.state = {
-            helpText : "Help text",
-            userData : "",
+            users: []
         }
-        this.inputClick = this.inputClick.bind(this)
+        // чтобы метод имел возможность менять состояние, прописываем следующее:
+        this.addUser = this.addUser.bind(this)
+        this.deleteUser = this.deleteUser.bind(this)
+        this.editUser = this.editUser.bind(this)
     }
     render(){
-        return (<div className="some_name">
-            <Header title="Header of this site" name=""/>
-            <h1>{this.state.helpText}</h1>
-            <h2>{this.state.userData}</h2>
-            <input placeholder={this.helpText} 
-            onChange={event => this.setState({userData: event.target.value})}
-            onClick={this.inputClick} onMouseOver={this.mouseOver}/>
-            <p>{this.state.helpText === "Help text" ? "yes" : "no"}</p> 
-             <Image image={logo}/>
+        return (<div>
+            <Header title="Список пользователей"/>
+            <main>
+                <Users users={this.state.users} onEdit={this.editUser} onDelete={this.deleteUser}/>
+            </main>
+            <aside>
+                <AddUser onAdd={this.addUser}/>
+            </aside>
         </div>)
     } 
 
-    // функции-обработчики событий
-    inputClick() {
-        this.setState({helpText: "changed"})
-        console.log("clicked!")
+    deleteUser(id){
+        // заново добавляем в список все элементы, кроме элемента с переданным id
+        this.setState({
+            users: this.state.users.filter((el) => el.id !== id)
+        })
     }
-    mouseOver() {console.log("mouse over!")}
+
+    editUser(user){
+        let allUsers = this.state.users
+        allUsers[user.id - 1] = user
+        this.setState({users: []}, ()=> {this.setState({users: [...allUsers]})})
+    }
+
+    addUser(user){
+        const id = this.state.users.length + 1
+        // следующей строкой меняем список на такой же список плюс новый объект
+        this.setState({users: [...this.state.users, {id, ...user}]})
+    }
 }
 
 export default App
